@@ -7,7 +7,7 @@ from db import get_db, settings
 from models.artwork import (
     ArtworkCreate, ArtworkUpdate, ArtworkOut, ArtworkFilters
 )
-from services.gdrive_services import (
+from services.gdrive_service import (
     extract_file_id, thumbnail_url, view_url
 )
 
@@ -32,8 +32,8 @@ def artwork_to_out(doc: dict) -> ArtworkOut:
         collection_id=doc.get("collection_id"),
         gdrive_file_id=fid,
         is_available=doc.get("is_available", True),
-        price=doc.get("price"),
         sort_order=doc.get("sort_order", 0),
+        fusions=doc.get("fusions", []),
         image_url=thumbnail_url(fid, 800),
         full_url=view_url(fid),
         created_at=doc["created_at"],
