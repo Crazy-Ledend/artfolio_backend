@@ -2,8 +2,10 @@ services:
   - type: web
     name: artfolio-api
     runtime: python
+    region: oregon
+    plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    startCommand: gunicorn main:app -w 2 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
     envVars:
       - key: MONGODB_URL
         sync: false
@@ -14,3 +16,4 @@ services:
       - key: CORS_ORIGINS
         sync: false
     healthCheckPath: /health
+    autoDeploy: true
