@@ -25,7 +25,7 @@ async def get_fusions(db=Depends(get_db)):
     )
     docs = await cursor.to_list(length=1000)
 
-    from services.gdrive_service import thumbnail_url, view_url
+    from services.gdrive_services import thumbnail_url, view_url
 
     fusion_map: dict[str, list] = {}
     for doc in docs:

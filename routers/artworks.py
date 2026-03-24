@@ -7,7 +7,7 @@ from db import get_db, settings
 from models.artwork import (
     ArtworkCreate, ArtworkUpdate, ArtworkOut, ArtworkFilters
 )
-from services.gdrive_service import (
+from services.gdrive_services import (
     extract_file_id, thumbnail_url, view_url
 )
 
