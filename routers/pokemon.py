@@ -1,25 +1,32 @@
+import time
 from fastapi import APIRouter, Depends
 from db import get_db
 
 router = APIRouter(prefix="/pokemon", tags=["pokemon"])
 
+# In-memory cache — fusion map rarely changes
+_cache: dict = {}
+_cache_time: float = 0
+CACHE_TTL = 60  # seconds
+
 
 @router.get("/fusions")
 async def get_fusions(db=Depends(get_db)):
-    """
-    Returns a map of pokemon_name -> list of artworks that include it in fusions.
-    Frontend uses this to know which pokemon to light up.
-    """
+    global _cache, _cache_time
+
+    # Return cached if fresh
+    if _cache and (time.time() - _cache_time) < CACHE_TTL:
+        return _cache
+
     cursor = db.artworks.find(
-        {"fusions": {"$exists": True, "$ne": []}},
+        {"fusions": {"$exists": True, "$not": {"$size": 0}}},
         {"_id": 1, "title": 1, "fusions": 1, "gdrive_file_id": 1,
          "description": 1, "medium": 1, "year": 1, "tags": 1}
     )
     docs = await cursor.to_list(length=1000)
 
-    from services.gdrive_services import thumbnail_url, view_url
+    from services.gdrive_service import thumbnail_url, view_url
 
-    # Build map: pokemon_name -> [{artwork info}]
     fusion_map: dict[str, list] = {}
     for doc in docs:
         artwork_info = {
@@ -39,4 +46,14 @@ async def get_fusions(db=Depends(get_db)):
                 fusion_map[name] = []
             fusion_map[name].append(artwork_info)
 
-    return {"fusions": fusion_map}
+    _cache = {"fusions": fusion_map}
+    _cache_time = time.time()
+    return _cache
+
+
+@router.post("/fusions/invalidate")
+async def invalidate_cache():
+    """Call this after uploading new artwork to refresh the fusion map."""
+    global _cache_time
+    _cache_time = 0
+    return {"ok": True}

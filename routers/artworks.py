@@ -7,7 +7,7 @@ from db import get_db, settings
 from models.artwork import (
     ArtworkCreate, ArtworkUpdate, ArtworkOut, ArtworkFilters
 )
-from services.gdrive_services import (
+from services.gdrive_service import (
     extract_file_id, thumbnail_url, view_url
 )
 
@@ -138,6 +138,8 @@ async def create_artwork(
     }
     result = await db.artworks.insert_one(doc)
     doc["_id"] = result.inserted_id
+    # Invalidate fusion map cache
+    from routers.pokemon import invalidate_cache as _inv; await _inv()
     return artwork_to_out(doc)
 
 
