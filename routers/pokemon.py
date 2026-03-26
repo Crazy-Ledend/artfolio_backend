@@ -25,16 +25,17 @@ async def get_fusions(db=Depends(get_db)):
     )
     docs = await cursor.to_list(length=1000)
 
-    from services.gdrive_services import thumbnail_url, view_url
+    from services.gdrive_services import view_url
 
     fusion_map: dict[str, list] = {}
     for doc in docs:
+        full_res_url = view_url(doc["gdrive_file_id"])
         artwork_info = {
             "id": str(doc["_id"]),
             "title": doc["title"],
             "fusions": doc.get("fusions", []),
-            "image_url": thumbnail_url(doc["gdrive_file_id"], 400),
-            "full_url": view_url(doc["gdrive_file_id"]),
+            "image_url": full_res_url,
+            "full_url": full_res_url,
             "description": doc.get("description"),
             "medium": doc.get("medium"),
             "year": doc.get("year"),

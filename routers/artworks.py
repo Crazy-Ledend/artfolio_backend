@@ -8,7 +8,7 @@ from models.artwork import (
     ArtworkCreate, ArtworkUpdate, ArtworkOut, ArtworkFilters
 )
 from services.gdrive_services import (
-    extract_file_id, thumbnail_url, view_url
+    extract_file_id, view_url
 )
 
 router = APIRouter(prefix="/artworks", tags=["artworks"])
@@ -21,6 +21,7 @@ def require_admin(x_admin_secret: str = Header(...)):
 
 def artwork_to_out(doc: dict) -> ArtworkOut:
     fid = doc["gdrive_file_id"]
+    full_res_url = view_url(fid)
     return ArtworkOut(
         id=str(doc["_id"]),
         title=doc["title"],
@@ -34,8 +35,8 @@ def artwork_to_out(doc: dict) -> ArtworkOut:
         is_available=doc.get("is_available", True),
         sort_order=doc.get("sort_order", 0),
         fusions=doc.get("fusions", []),
-        image_url=thumbnail_url(fid, 800),
-        full_url=view_url(fid),
+        image_url=full_res_url,
+        full_url=full_res_url,
         created_at=doc["created_at"],
         updated_at=doc["updated_at"],
     )

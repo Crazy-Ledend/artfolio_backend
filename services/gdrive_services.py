@@ -39,9 +39,9 @@ def thumbnail_url(file_id: str, width: int = 800) -> str:
 
 def view_url(file_id: str) -> str:
     """
-    Full-resolution direct view URL.
+    Direct image URL that reliably renders in <img> tags for public files.
     """
-    return f"https://drive.google.com/uc?export=view&id={file_id}"
+    return f"https://lh3.googleusercontent.com/d/{file_id}"
 
 
 def shareable_url(file_id: str) -> str:
