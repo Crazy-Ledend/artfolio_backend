@@ -4,7 +4,7 @@ from bson import ObjectId
 
 from db import get_db, settings
 from models.artwork import CollectionCreate, CollectionUpdate, CollectionOut
-from services.gdrive_services import thumbnail_url
+from services.gdrive_services import view_url, extract_file_id
 
 router = APIRouter(prefix="/collections", tags=["collections"])
 
@@ -15,15 +15,18 @@ def require_admin(x_admin_secret: str = Header(...)):
 
 
 def col_to_out(doc: dict, count: int = 0) -> CollectionOut:
-    fid = doc.get("cover_gdrive_file_id")
+    raw_fid = doc.get("cover_gdrive_file_id")
+    fid = extract_file_id(raw_fid) if raw_fid else None
+    if not fid and raw_fid:
+        fid = raw_fid
     return CollectionOut(
         id=str(doc["_id"]),
         name=doc["name"],
         slug=doc["slug"],
         description=doc.get("description"),
-        cover_gdrive_file_id=fid,
+        cover_gdrive_file_id=raw_fid,
         sort_order=doc.get("sort_order", 0),
-        cover_url=thumbnail_url(fid, 600) if fid else None,
+        cover_url=view_url(fid) if fid else None,
         artwork_count=count,
         created_at=doc["created_at"],
     )
