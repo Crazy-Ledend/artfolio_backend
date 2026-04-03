@@ -59,6 +59,8 @@ class ArtworkOut(ArtworkBase):
     created_at: datetime
     updated_at: datetime
     model_config = {"arbitrary_types_allowed": True}
+    like_count: int = 0
+    liked_by_me: bool = False
 
 
 # ── Collection ────────────────────────────────────────────

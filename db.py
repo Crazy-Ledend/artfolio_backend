@@ -8,6 +8,16 @@ class Settings(BaseSettings):
     admin_secret: str = "change-this-secret-key"
     cors_origins: str = "http://localhost:5173"
 
+    # Discord OAuth
+    discord_client_id: str = ""
+    discord_client_secret: str = ""
+    discord_redirect_uri: str = "http://localhost:8000/auth/discord/callback"
+
+    # JWT Session
+    jwt_secret: str = "fallback-secret-for-dev-only"
+    jwt_algorithm: str = "HS256"
+    frontend_url: str = "http://localhost:5173"
+
     class Config:
         env_file = ".env"
 
