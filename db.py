@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     mongodb_url: str = "mongodb://localhost:27017"
     db_name: str = "artfolio"
     admin_secret: str = "change-this-secret-key"
-    cors_origins: str = "http://localhost:5173"
+    cors_origins: str = "https://shellyeah.art"
 
     # Discord OAuth
     discord_client_id: str = ""
@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     # JWT Session
     jwt_secret: str = "fallback-secret-for-dev-only"
     jwt_algorithm: str = "HS256"
-    frontend_url: str = "http://localhost:5173"
+    frontend_url: str = "https://shellyeah.art"
 
     class Config:
         env_file = ".env"
