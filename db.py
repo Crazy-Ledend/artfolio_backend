@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     # Discord OAuth
     discord_client_id: str = ""
     discord_client_secret: str = ""
-    discord_redirect_uri: str = "http://localhost:8000/auth/discord/callback"
+    discord_redirect_uri: str = "https://artfolio-api.onrender.com/auth/discord/callback"
 
     # JWT Session
     jwt_secret: str = "fallback-secret-for-dev-only"
