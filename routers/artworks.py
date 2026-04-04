@@ -93,6 +93,7 @@ async def list_artworks(
             {"description": {"$regex": search, "$options": "i"}},
             {"tags": {"$regex": search, "$options": "i"}},
             {"medium": {"$regex": search, "$options": "i"}},
+            {"fusions": {"$regex": search, "$options": "i"}},
         ]
 
     total = await db.artworks.count_documents(query)

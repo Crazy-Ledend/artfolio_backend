@@ -42,10 +42,19 @@ async def create_request(payload: FusionRequestIn, request: Request, db=Depends(
 
 
 @router.get("")
-async def list_requests(db=Depends(get_db), _=Depends(require_admin)):
-    cursor = db.fusion_requests.find({}).sort("votes", -1)
-    docs = await cursor.to_list(length=500)
-    return [
+async def list_requests(
+    page: int = 1,
+    limit: int = 50,
+    db=Depends(get_db), 
+    _=Depends(require_admin)
+):
+    total = await db.fusion_requests.count_documents({})
+    skip = (page - 1) * limit
+    
+    cursor = db.fusion_requests.find({}).sort("votes", -1).skip(skip).limit(limit)
+    docs = await cursor.to_list(length=limit)
+    
+    items = [
         {
             "id": str(d["_id"]),
             "poke1": d["poke1"],
@@ -55,6 +64,13 @@ async def list_requests(db=Depends(get_db), _=Depends(require_admin)):
         }
         for d in docs
     ]
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "pages": (total + limit - 1) // limit,
+    }
 
 
 @router.delete("/{request_id}", status_code=204)

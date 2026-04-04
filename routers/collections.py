@@ -32,17 +32,39 @@ def col_to_out(doc: dict, count: int = 0) -> CollectionOut:
     )
 
 
-@router.get("", response_model=list[CollectionOut])
-async def list_collections(db=Depends(get_db)):
-    cursor = db.collections.find({}).sort([("sort_order", 1), ("name", 1)])
-    docs = await cursor.to_list(length=200)
-    result = []
+@router.get("", response_model=dict)
+async def list_collections(
+    search: str | None = None,
+    page: int = 1,
+    limit: int = 24,
+    db=Depends(get_db)
+):
+    query = {}
+    if search:
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"slug": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}},
+        ]
+        
+    total = await db.collections.count_documents(query)
+    skip = (page - 1) * limit
+    
+    cursor = db.collections.find(query).sort([("sort_order", 1), ("name", 1)]).skip(skip).limit(limit)
+    docs = await cursor.to_list(length=limit)
+    
+    items = []
     for doc in docs:
-        count = await db.artworks.count_documents(
-            {"collection_id": str(doc["_id"])}
-        )
-        result.append(col_to_out(doc, count))
-    return result
+        count = await db.artworks.count_documents({"collection_id": str(doc["_id"])})
+        items.append(col_to_out(doc, count).model_dump())
+        
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "pages": (total + limit - 1) // limit,
+    }
 
 
 @router.get("/{collection_id}", response_model=CollectionOut)

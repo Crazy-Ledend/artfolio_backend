@@ -42,3 +42,13 @@ async def mark_read(
         {"_id": ObjectId(contact_id)}, {"$set": {"read": True}}
     )
     return {"ok": True}
+
+
+@router.delete("/{contact_id}", status_code=204)
+async def delete_contact(
+    contact_id: str, db=Depends(get_db), _=Depends(require_admin)
+):
+    from bson import ObjectId
+    result = await db.contacts.delete_one({"_id": ObjectId(contact_id)})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Message not found")
