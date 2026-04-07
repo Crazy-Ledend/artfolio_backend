@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Header, Request
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt
 from pydantic import BaseModel
 from db import get_db, settings
 
@@ -10,6 +12,18 @@ def require_admin(x_admin_secret: str = Header(...)):
     if x_admin_secret != settings.admin_secret:
         raise HTTPException(status_code=403, detail="Invalid admin secret")
 
+security = HTTPBearer()
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    try:
+        return jwt.decode(
+            credentials.credentials,
+            settings.jwt_secret,
+            algorithms=[settings.jwt_algorithm],
+        )
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
 
 class FusionRequestIn(BaseModel):
     poke1: str
@@ -17,23 +31,42 @@ class FusionRequestIn(BaseModel):
 
 
 @router.post("", status_code=201)
-async def create_request(payload: FusionRequestIn, request: Request, db=Depends(get_db)):
+async def create_request(
+    payload: FusionRequestIn, 
+    request: Request, 
+    db=Depends(get_db),
+    user=Depends(get_current_user)
+):
     # Preserve order so Head + Body are distinct
     pair = (payload.poke1.lower(), payload.poke2.lower())
+
+    requester_data = {
+        "id": user.get("id"),
+        "username": user.get("username"),
+        "avatar": user.get("avatar")
+    }
 
     # Check if already requested — upsert vote count
     existing = await db.fusion_requests.find_one({"poke1": pair[0], "poke2": pair[1]})
     if existing:
+        is_new_requester = not any(r.get("id") == requester_data["id"] for r in existing.get("requesters", []))
+        update_op = {"$set": {"updated_at": datetime.now(timezone.utc)}}
+        
+        if is_new_requester:
+            update_op["$inc"] = {"votes": 1}
+            update_op["$addToSet"] = {"requesters": requester_data}
+
         await db.fusion_requests.update_one(
             {"_id": existing["_id"]},
-            {"$inc": {"votes": 1}, "$set": {"updated_at": datetime.now(timezone.utc)}}
+            update_op
         )
-        return {"id": str(existing["_id"]), "votes": existing["votes"] + 1}
+        return {"id": str(existing["_id"]), "votes": existing.get("votes", 1) + (1 if is_new_requester else 0)}
 
     doc = {
         "poke1": pair[0],
         "poke2": pair[1],
         "votes": 1,
+        "requesters": [requester_data],
         "created_at": datetime.now(timezone.utc),
         "updated_at": datetime.now(timezone.utc),
     }
@@ -70,6 +103,7 @@ async def list_requests(
             "poke1": d["poke1"],
             "poke2": d["poke2"],
             "votes": d.get("votes", 1),
+            "requesters": d.get("requesters", []),
             "created_at": d["created_at"],
             "completed": d.get("completed", False),
         }
