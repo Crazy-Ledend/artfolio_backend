@@ -18,8 +18,8 @@ class FusionRequestIn(BaseModel):
 
 @router.post("", status_code=201)
 async def create_request(payload: FusionRequestIn, request: Request, db=Depends(get_db)):
-    # Normalize order so pikachu+snorlax == snorlax+pikachu
-    pair = tuple(sorted([payload.poke1.lower(), payload.poke2.lower()]))
+    # Preserve order so Head + Body are distinct
+    pair = (payload.poke1.lower(), payload.poke2.lower())
 
     # Check if already requested — upsert vote count
     existing = await db.fusion_requests.find_one({"poke1": pair[0], "poke2": pair[1]})
@@ -39,6 +39,16 @@ async def create_request(payload: FusionRequestIn, request: Request, db=Depends(
     }
     result = await db.fusion_requests.insert_one(doc)
     return {"id": str(result.inserted_id), "votes": 1}
+
+
+@router.get("/check/{poke1}/{poke2}")
+async def check_request(poke1: str, poke2: str, db=Depends(get_db)):
+    # Check if a fusion request currently exists
+    existing = await db.fusion_requests.find_one({
+        "poke1": poke1.lower(),
+        "poke2": poke2.lower()
+    })
+    return {"exists": bool(existing)}
 
 
 @router.get("")
@@ -61,6 +71,7 @@ async def list_requests(
             "poke2": d["poke2"],
             "votes": d.get("votes", 1),
             "created_at": d["created_at"],
+            "completed": d.get("completed", False),
         }
         for d in docs
     ]
@@ -77,3 +88,12 @@ async def list_requests(
 async def delete_request(request_id: str, db=Depends(get_db), _=Depends(require_admin)):
     from bson import ObjectId
     await db.fusion_requests.delete_one({"_id": ObjectId(request_id)})
+
+@router.patch("/{request_id}/complete", status_code=200)
+async def complete_request(request_id: str, db=Depends(get_db), _=Depends(require_admin)):
+    from bson import ObjectId
+    await db.fusion_requests.update_one(
+        {"_id": ObjectId(request_id)},
+        {"$set": {"completed": True}}
+    )
+    return {"ok": True}
