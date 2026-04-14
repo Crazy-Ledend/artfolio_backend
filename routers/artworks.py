@@ -56,6 +56,7 @@ def artwork_to_out(doc: dict, viewer_id: Optional[str] = None) -> ArtworkOut:
         is_available=doc.get("is_available", True),
         sort_order=doc.get("sort_order", 0),
         fusions=doc.get("fusions", []),
+        obtainable_in=doc.get("obtainable_in", []),
         image_url=full_res_url,
         full_url=full_res_url,
         like_count=doc.get("like_count", 0),
@@ -252,6 +253,7 @@ async def update_artwork(
     )
     if not result:
         raise HTTPException(status_code=404, detail="Artwork not found")
+    from routers.pokemon import invalidate_cache as _inv; await _inv()
     return artwork_to_out(result)
 
 

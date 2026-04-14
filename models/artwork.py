@@ -30,6 +30,7 @@ class ArtworkBase(BaseModel):
     is_available: bool = True
     sort_order: int = 0
     fusions: list[str] = []   # lowercase pokemon names e.g. ["bulbasaur", "pikachu"]
+    obtainable_in: list[str] = []
 
 
 class ArtworkCreate(ArtworkBase):
@@ -50,6 +51,7 @@ class ArtworkUpdate(BaseModel):
     is_available: Optional[bool] = None
     sort_order: Optional[int] = None
     fusions: Optional[list[str]] = None
+    obtainable_in: Optional[list[str]] = None
 
 
 class ArtworkOut(ArtworkBase):
