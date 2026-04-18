@@ -21,7 +21,7 @@ async def get_fusions(db=Depends(get_db)):
     cursor = db.artworks.find(
         {"fusions": {"$exists": True, "$not": {"$size": 0}}},
         {"_id": 1, "title": 1, "fusions": 1, "gdrive_file_id": 1,
-         "description": 1, "medium": 1, "year": 1, "tags": 1, "obtainable_in": 1}
+         "description": 1, "medium": 1, "year": 1, "tags": 1, "obtainable_in": 1, "created_at": 1}
     )
     docs = await cursor.to_list(length=1000)
 
@@ -41,6 +41,7 @@ async def get_fusions(db=Depends(get_db)):
             "year": doc.get("year"),
             "tags": doc.get("tags", []),
             "obtainable_in": doc.get("obtainable_in", []),
+            "created_at": doc.get("created_at").isoformat() if doc.get("created_at") else None,
         }
         for poke in doc.get("fusions", []):
             name = poke.lower()
