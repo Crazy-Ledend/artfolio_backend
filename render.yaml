@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: artfolio-api
+    name: artfolio-api-g8en
     runtime: python
     region: oregon
     plan: free
