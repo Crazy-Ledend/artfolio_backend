@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from db import connect_db, close_db, settings
-from routers import artworks, collections, contact, pokemon, profile, fusion_requests, auth
+from routers import artworks, collections, contact, pokemon, profile, fusion_requests, auth, analytics
 
 
 @asynccontextmanager
@@ -32,6 +32,7 @@ app.include_router(pokemon.router)
 app.include_router(profile.router)
 app.include_router(fusion_requests.router)
 app.include_router(auth.router)
+app.include_router(analytics.router)
 
 
 @app.get("/health")
