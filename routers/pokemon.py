@@ -21,7 +21,7 @@ async def get_fusions(db=Depends(get_db)):
     cursor = db.artworks.find(
         {"fusions": {"$exists": True, "$not": {"$size": 0}}},
         {"_id": 1, "title": 1, "fusions": 1, "gdrive_file_id": 1,
-         "description": 1, "medium": 1, "year": 1, "tags": 1, "obtainable_in": 1, "created_at": 1}
+         "description": 1, "medium": 1, "year": 1, "tags": 1, "obtainable_in": 1, "created_at": 1, "like_count": 1}
     )
     docs = await cursor.to_list(length=1000)
 
