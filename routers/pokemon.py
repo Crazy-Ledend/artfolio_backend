@@ -42,6 +42,7 @@ async def get_fusions(db=Depends(get_db)):
             "tags": doc.get("tags", []),
             "obtainable_in": doc.get("obtainable_in", []),
             "created_at": doc.get("created_at").isoformat() if doc.get("created_at") else None,
+            "like_count": doc.get("like_count", 0),
         }
         for poke in doc.get("fusions", []):
             name = poke.lower()
